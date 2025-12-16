@@ -1,2 +1,18 @@
-# BETSure-SID39-2025
-SureBet Calculator built using HTML, CSS, JavaScript, and Java backend logic to analyze betting odds and identify profitable arbitrage opportunities.
+# SureBet Calculator
+
+SureBet Calculator is a web-based application that identifies arbitrage betting opportunities by analyzing odds from multiple platforms.
+
+## Features
+- Calculates sure bet profit percentage
+- Supports multiple odds input
+- Simple and clean user interface
+- Instant result calculation
+
+## Tech Stack
+- HTML
+- CSS
+- JavaScript
+- Java (logic)
+
+## Author
+SID
