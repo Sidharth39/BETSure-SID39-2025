@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BETSmart – Sure Bet Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <!-- Header / Navbar -->
+    <nav class="gradient-bg text-white py-4 px-6 shadow-lg">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-chart-line text-2xl text-green-400"></i>
+                <span class="text-2xl font-bold tracking-tight">BETSmart</span>
+            </div>
+            <div class="hidden md:block text-sm font-medium text-blue-100">
+                Arbitrage Betting Engine
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-4 md:p-8">
+        <!-- Intro Section -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">BETSmart <span class="text-blue-600">Arbitrage</span></h1>
+            <p class="text-gray-600">Professional tool to calculate guaranteed profit across different bookmakers.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Input Column -->
+            <div class="md:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 card-shadow">
+                    <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-calculator mr-2 text-blue-600"></i> Bet Parameters
+                    </h2>
+                    
+                    <form id="betForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Total Investment (₹)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-400">₹</span>
+                                <input type="number" id="totalStake" value="10000" step="1" min="1" 
+                                    class="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3 pt-2">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Outcome Odds</label>
+                            <div>
+                                <input type="number" id="odds1" placeholder="Bookie A Odds (e.g. 2.10)" step="0.01" min="1.01" required
+                                    class="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div>
+                                <input type="number" id="odds2" placeholder="Bookie B Odds (e.g. 2.05)" step="0.01" min="1.01" required
+                                    class="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div id="thirdOddsContainer" class="hidden">
+                                <input type="number" id="odds3" placeholder="Bookie C Odds (Optional)" step="0.01" min="1.01"
+                                    class="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 py-2">
+                            <input type="checkbox" id="threeWaySwitch" class="w-4 h-4 text-blue-600">
+                            <label for="threeWaySwitch" class="text-sm text-gray-600 cursor-pointer select-none">3-Way Bet (Draw/Option C)</label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-4 rounded-xl transition transform active:scale-95 shadow-lg flex items-center justify-center">
+                            Run Analysis <i class="fas fa-bolt ml-2 text-yellow-400"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <p class="text-xs text-blue-800 italic">
+                        <strong>Logic Tip:</strong> A sure bet exists when the sum of the inverse of all odds is less than 1.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Result Column -->
+            <div class="md:col-span-2">
+                <div id="resultsPlaceholder" class="bg-white p-12 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400">
+                    <i class="fas fa-calculator text-5xl mb-4 opacity-20"></i>
+                    <p>Enter values and click calculate to see the analysis</p>
+                </div>
+
+                <div id="resultsCard" class="hidden space-y-6">
+                    <!-- Status Header -->
+                    <div id="statusHeader" class="p-6 rounded-xl border flex items-center justify-between">
+                        <div>
+                            <h3 id="statusTitle" class="text-xl font-bold">Checking...</h3>
+                            <p id="statusDesc" class="text-sm opacity-90"></p>
+                        </div>
+                        <div id="statusIcon" class="text-4xl"></div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <span class="text-gray-500 text-xs uppercase font-bold tracking-wider">Implied Probability</span>
+                            <div id="probValue" class="text-2xl font-bold text-gray-800">0%</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <span class="text-gray-500 text-xs uppercase font-bold tracking-wider">ROI / Profit</span>
+                            <div id="profitValue" class="text-2xl font-bold text-gray-800">₹0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Betting Plan Table -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <h3 class="font-bold text-gray-800">Your Wagering Strategy</h3>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3">Outcome</th>
+                                    <th class="px-6 py-3">Odds</th>
+                                    <th class="px-6 py-3">Stake to Place</th>
+                                    <th class="px-6 py-3">Return</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 font-medium">Outcome A</td>
+                                    <td id="tableOdds1" class="px-6 py-4">0</td>
+                                    <td id="tableStake1" class="px-6 py-4 font-bold text-blue-600">$0.00</td>
+                                    <td id="tableReturn1" class="px-6 py-4">$0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-medium">Outcome B</td>
+                                    <td id="tableOdds2" class="px-6 py-4">0</td>
+                                    <td id="tableStake2" class="px-6 py-4 font-bold text-blue-600">$0.00</td>
+                                    <td id="tableReturn2" class="px-6 py-4">$0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Simple Explanation & Footer -->
+    <footer class="mt-12 bg-gray-900 text-gray-300 py-12 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 border-b border-gray-800 pb-10">
+                <!-- Simple Logic Explanation -->
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-4">How it Works</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                        Arbitrage betting (or "Sure Betting") is a simple mathematical trick. By comparing odds from different bookmakers, we can find situations where the total probability of all outcomes is less than 100%.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start">
+                            <div class="bg-blue-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs mt-1 mr-3 shrink-0">1</div>
+                            <p class="text-sm">We calculate the <strong>Implied Probability</strong> for each outcome (1 divided by the Odds).</p>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-blue-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs mt-1 mr-3 shrink-0">2</div>
+                            <p class="text-sm">If the sum of all probabilities is <strong>less than 100%</strong>, a guaranteed profit exists.</p>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-blue-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs mt-1 mr-3 shrink-0">3</div>
+                            <p class="text-sm">The tool calculates exactly how much money to put on each result so you <strong>win the same amount</strong> no matter who wins the match.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Status -->
+                <div>
+                    <h3 class="text-white text-xl font-bold mb-4">Project Status</h3>
+                    <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                        <p class="text-sm italic text-gray-400">
+                            "This project is currently in the prototype phase, successfully implementing the mathematical arbitrage engine. The next stage involves migrating to a full-stack Java (J2EE) environment to handle server-side data persistence."
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Copyright -->
+            <div class="mt-8 text-center text-gray-500 text-sm">
+                SID39 © 2025
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * MODEL LAYER (Equivalent to Bet.java)
+         */
+        class BetModel {
+            constructor(odds, totalStake) {
+                this.odds = odds; // Array of odds
+                this.totalStake = totalStake;
+            }
+        }
+
+        /**
+         * SERVICE LAYER (Equivalent to SureBetService.java)
+         */
+        class SureBetService {
+            calculateArbitrage(betModel) {
+                const probabilities = betModel.odds.map(o => 1 / o);
+                const totalProb = probabilities.reduce((a, b) => a + b, 0);
+                const isSureBet = totalProb < 1;
+                
+                // Individual Stakes = (Individual Prob / Total Prob) * Total Stake
+                const stakes = probabilities.map(p => (p / totalProb) * betModel.totalStake);
+                
+                // Return = Stake * Odds (All returns should be equal)
+                const guaranteedReturn = stakes[0] * betModel.odds[0];
+                const profit = guaranteedReturn - betModel.totalStake;
+                const roi = (profit / betModel.totalStake) * 100;
+
+                return {
+                    isSureBet,
+                    totalProb: totalProb * 100,
+                    stakes,
+                    guaranteedReturn,
+                    profit,
+                    roi
+                };
+            }
+        }
+
+        /**
+         * CONTROLLER LAYER (Equivalent to SureBetServlet.java)
+         */
+        const service = new SureBetService();
+        
+        // UI Interaction Handlers
+        const threeWaySwitch = document.getElementById('threeWaySwitch');
+        const thirdOddsContainer = document.getElementById('thirdOddsContainer');
+        const form = document.getElementById('betForm');
+
+        threeWaySwitch.addEventListener('change', (e) => {
+            thirdOddsContainer.classList.toggle('hidden', !e.target.checked);
+            if (!e.target.checked) document.getElementById('odds3').value = '';
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // 1. Data Retrieval (like request.getParameter)
+            const o1 = parseFloat(document.getElementById('odds1').value);
+            const o2 = parseFloat(document.getElementById('odds2').value);
+            const o3Input = document.getElementById('odds3').value;
+            const totalStake = parseFloat(document.getElementById('totalStake').value);
+
+            const odds = [o1, o2];
+            if (threeWaySwitch.checked && o3Input) {
+                odds.push(parseFloat(o3Input));
+            }
+
+            // 2. Business Logic Execution
+            const model = new BetModel(odds, totalStake);
+            const result = service.calculateArbitrage(model);
+
+            // 3. View Update
+            renderResults(result, odds);
+        });
+
+        function renderResults(res, odds) {
+            const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+            const resultsCard = document.getElementById('resultsCard');
+            
+            resultsPlaceholder.classList.add('hidden');
+            resultsCard.classList.remove('hidden');
+
+            // Status UI
+            const statusHeader = document.getElementById('statusHeader');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusDesc = document.getElementById('statusDesc');
+            const statusIcon = document.getElementById('statusIcon');
+            
+            if (res.isSureBet) {
+                statusHeader.className = "p-6 rounded-xl border border-green-200 bg-green-50 text-green-800 flex items-center justify-between";
+                statusTitle.innerText = "Guaranteed Profit!";
+                statusDesc.innerText = `Arbitrage opportunity found with ${res.roi.toFixed(2)}% ROI.`;
+                statusIcon.innerHTML = '<i class="fas fa-unlock text-green-500"></i>';
+            } else {
+                statusHeader.className = "p-6 rounded-xl border border-red-200 bg-red-50 text-red-800 flex items-center justify-between";
+                statusTitle.innerText = "Negative Margin";
+                statusDesc.innerText = "The bookmaker has the edge here. Expected loss: " + Math.abs(res.roi).toFixed(2) + "%.";
+                statusIcon.innerHTML = '<i class="fas fa-lock text-red-400"></i>';
+            }
+
+            // Metrics UI
+            document.getElementById('probValue').innerText = res.totalProb.toFixed(2) + "%";
+            document.getElementById('profitValue').innerText = (res.profit >= 0 ? "+" : "") + "₹" + res.profit.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('profitValue').className = `text-2xl font-bold ${res.profit >= 0 ? 'text-green-600' : 'text-red-600'}`;
+
+            // Table UI
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear previous
+
+            odds.forEach((odd, index) => {
+                const label = odds.length === 2 ? (index === 0 ? "Outcome A" : "Outcome B") : (index === 0 ? "Home" : index === 1 ? "Away" : "Draw");
+                const row = `
+                    <tr>
+                        <td class="px-6 py-4 font-medium text-gray-700">${label}</td>
+                        <td class="px-6 py-4">${odd.toFixed(2)}</td>
+                        <td class="px-6 py-4 font-bold text-blue-600">₹${res.stakes[index].toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-6 py-4 text-gray-600">₹${res.guaranteedReturn.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>
